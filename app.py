@@ -19,9 +19,9 @@ st.markdown("""
     --surface-2: #F7F8FC;
     --border:    #E4E8F2;
     --border-2:  #CDD3E8;
-    --txt1:      #2C2418
-    --txt2:      #2C2418
-    --txt3:      #2C2418
+    --txt1:      #2C2418;
+    --txt2:      #2C2418;
+    --txt3:      #2C2418;
     --blue:      #4263EB;
     --blue-lt:   #EDF0FF;
     --blue-dk:   #3151CC;
