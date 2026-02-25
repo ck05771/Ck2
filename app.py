@@ -15,10 +15,10 @@ st.markdown("""
 
 :root {
     --bg:        #F0F2F8;
-    --surface:   #FFFFFF;
-    --surface-2: #F7F8FC;
-    --border:    #E4E8F2;
-    --border-2:  #CDD3E8;
+    --surface:   #000000;
+    --surface-2: #000000;
+    --border:    #000000;
+    --border-2:  #000000;
     --txt1:      #000000;
     --txt2:      #000000;
     --txt3:      #000000;
@@ -638,4 +638,5 @@ with tab5:
         best_p = top5_prod.iloc[0]['Product Name']
 
         st.success(f"**Executive Summary** — ภูมิภาคหลัก: **{best_r}** · สินค้าอันดับ 1: **{best_p}** · เตรียมสต็อกล่วงหน้าตาม Peak Month")
+
 
