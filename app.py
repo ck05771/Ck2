@@ -14,23 +14,24 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg:        #F0F2F8;
+    :root {
+    --bg:        #F0F4FF;
     --surface:   #FFFFFF;
-    --surface-2: #F7F8FC;
-    --border:    #E4E8F2;
-    --border-2:  #CDD3E8;
-    --txt1:      #000000;
-    --txt2:      #000000;
-    --blue:      #000000;
-    --blue-lt:   #EDF0FF;
-    --blue-dk:   #3151CC;
-    --green:     #12B76A;
-    --green-lt:  #ECFDF5;
+    --surface-2: #F5F8FF;
+    --border:    #D6E0FF;
+    --border-2:  #BFD0FF;
+
+    --txt1:      #1E3A8A;   /* น้ำเงินเข้ม */
+    --txt2:      #2563EB;   /* น้ำเงินหลัก */
+    --txt3:      #3B82F6;   /* น้ำเงินอ่อน */
+
+    --blue:      #2563EB;
+    --blue-lt:   #E0EDFF;
+    --blue-dk:   #1D4ED8;
+
+    --green:     #16A34A;
     --amber:     #F59E0B;
-    --amber-lt:  #FFFBEB;
-    --red:       #000000;
-    --red-lt:    #000000;
-    --purple:    #000000;
+    --red:       #DC2626;
     --r4: 6px; --r8: 10px; --r12: 14px; --r16: 18px;
     --sh:  0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
     --sh2: 0 4px 16px rgba(0,0,0,.08);
