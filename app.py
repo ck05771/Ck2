@@ -2,515 +2,638 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import seaborn as sns
 import os
 
-# ── Page config ──────────────────────────────────────────────────────────────
-st.set_page_config(page_title="Sales Analytics Dashboard", layout="wide")
+st.set_page_config(page_title="DataFlow · Sales", layout="wide", page_icon="📊")
 
-# ── Global CSS: Warm Earthy Professional ──────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# GLOBAL CSS — Clean SaaS Light Theme
+# ═══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* Root variables — blue palette */
 :root {
-    --bg:            #EEF3FB;
-    --bg-alt:        #E0EAF7;
-    --surface:       #F5F8FF;
-    --surface-2:     #E8F0FA;
-    --border:        #C5D5EE;
-    --border-strong: #A0BADE;
-    --text-primary:  #1A3A6E;
-    --text-secondary:#3B68B0;
-    --accent:        #1D5CC8;
-    --accent-light:  #DDEAFC;
-    --accent-2:      #2B8AC4;
-    --success:       #1A6E50;
-    --warning:       #A06010;
-    --danger:        #A83232;
-    --radius:        12px;
-    --shadow:        0 2px 12px rgba(26,58,110,0.10);
+    --bg:        #F0F2F8;
+    --surface:   #FFFFFF;
+    --surface-2: #F7F8FC;
+    --border:    #E4E8F2;
+    --border-2:  #CDD3E8;
+    --txt1:      #0C1023;
+    --txt2:      #4A5478;
+    --txt3:      #8A93B0;
+    --blue:      #4263EB;
+    --blue-lt:   #EDF0FF;
+    --blue-dk:   #3151CC;
+    --green:     #12B76A;
+    --green-lt:  #ECFDF5;
+    --amber:     #F59E0B;
+    --amber-lt:  #FFFBEB;
+    --red:       #F04438;
+    --red-lt:    #FEF3F2;
+    --purple:    #7C3AED;
+    --r4: 6px; --r8: 10px; --r12: 14px; --r16: 18px;
+    --sh:  0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+    --sh2: 0 4px 16px rgba(0,0,0,.08);
 }
-
-/* Base */
-html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text-primary);
+*, html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+    box-sizing: border-box;
 }
-
-.stApp { background: var(--bg); }
-
-/* Hide default streamlit chrome */
+.stApp { background: var(--bg) !important; }
 #MainMenu, footer, header { visibility: hidden; }
-.block-container {
-    padding: 2.5rem 3.5rem 4rem 3.5rem;
-    max-width: 1240px;
-}
+.block-container { padding: 0 2.2rem 3rem 2.2rem !important; max-width: 1440px !important; }
 
-/* Title area — editorial serif display */
-h1 {
-    font-family: 'Instrument Serif', Georgia, serif !important;
-    font-size: 2rem !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.01em;
-    color: var(--text-primary) !important;
-    margin-bottom: 0.1rem !important;
-    line-height: 1.2 !important;
+/* ══ Top bar ══ */
+.topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    margin: 0 -2.2rem 1.8rem -2.2rem;
+    padding: 0 2.2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 54px;
+    position: sticky; top: 0; z-index: 999;
 }
-
-h2 {
-    font-family: 'Instrument Serif', Georgia, serif !important;
-    font-size: 1.35rem !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.01em;
-    color: var(--text-primary) !important;
-    border-bottom: 1px solid var(--border) !important;
-    padding-bottom: 0.5rem !important;
-    margin-bottom: 1.2rem !important;
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand-mark {
+    width: 30px; height: 30px; background: var(--blue);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #fff; font-weight: 800; letter-spacing: -0.5px;
 }
+.brand-name { font-size: 0.88rem; font-weight: 700; letter-spacing: -0.02em; color: var(--txt1); }
+.brand-sep  { color: var(--border-2); margin: 0 2px; }
+.brand-sub  { font-size: 0.78rem; color: var(--txt3); font-weight: 400; }
+.topbar-pills { display: flex; gap: 6px; }
 
-h3 {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: var(--text-primary) !important;
-    letter-spacing: 0.01em;
+/* ══ Pill tags ══ */
+.pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 99px;
+    font-size: 0.69rem; font-weight: 600; letter-spacing: 0.02em;
+    border: 1px solid transparent;
 }
+.p-blue   { background: var(--blue-lt);  color: var(--blue);   border-color: #C5CFFF; }
+.p-green  { background: var(--green-lt); color: var(--green);  border-color: #A6F4C5; }
+.p-amber  { background: var(--amber-lt); color: #B45309;       border-color: #FDE68A; }
+.p-red    { background: var(--red-lt);   color: var(--red);    border-color: #FEA3A0; }
 
-/* Sidebar — warm toned */
-[data-testid="stSidebar"] {
-    background: var(--surface) !important;
-    border-right: 1px solid var(--border) !important;
+/* ══ Page header ══ */
+.ph {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1.4rem 0 1.2rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.4rem;
 }
-
-[data-testid="stSidebar"] .stRadio label {
-    font-size: 0.84rem;
-    color: var(--text-secondary);
-    padding: 0.45rem 0;
-    transition: color 0.15s;
+.ph-icon {
+    width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
 }
+.ph-title { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.025em; margin: 0; line-height: 1.2; }
+.ph-desc  { font-size: 0.76rem; color: var(--txt3); margin: 2px 0 0 0; }
 
-[data-testid="stSidebar"] .stRadio label:hover {
-    color: var(--accent) !important;
-}
-
-/* Metric cards — warm shadow */
-[data-testid="stMetric"] {
+/* ══ Cards ══ */
+.card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.1rem 1.4rem !important;
-    box-shadow: var(--shadow);
-    border-top: 3px solid var(--accent) !important;
+    border-radius: var(--r12);
+    padding: 1.3rem 1.5rem;
+    box-shadow: var(--sh);
+    margin-bottom: 1rem;
 }
+.ct {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--txt3);
+    margin-bottom: 0.8rem; padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+}
+.ct-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); display: inline-block; flex-shrink:0; }
 
-[data-testid="stMetricLabel"] {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
+/* ══ Workflow steps ══ */
+.wf-step {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 0.8rem 0; border-bottom: 1px solid var(--border);
 }
-[data-testid="stMetricValue"] {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-size: 2rem;
-    font-weight: 400;
-    color: var(--accent);
+.wf-step:last-child { border-bottom: none; }
+.wf-num {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: var(--blue); color: #fff;
+    font-size: 0.68rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
 }
-[data-testid="stMetricDelta"] { font-size: 0.8rem; }
+.wf-title { font-size: 0.83rem; font-weight: 600; }
+.wf-desc  { font-size: 0.75rem; color: var(--txt2); margin-top: 2px; line-height: 1.5; }
 
-/* Tables */
-[data-testid="stTable"] table, .stDataFrame table {
-    font-size: 0.82rem;
-    border-collapse: collapse;
-    width: 100%;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
+/* ══ Role rows ══ */
+.role-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 0.8rem 0.5rem; border-radius: var(--r8);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
 }
-
-[data-testid="stTable"] thead th, .stDataFrame thead th {
-    background: var(--bg-alt) !important;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.7rem 1rem !important;
-    border-bottom: 2px solid var(--border-strong) !important;
+.role-row:last-child { border-bottom: none; }
+.role-row:hover { background: var(--surface-2); }
+.role-av {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
 }
+.rn { font-size: 0.83rem; font-weight: 600; line-height: 1.2; }
+.rp { font-size: 0.73rem; color: var(--txt2); }
 
-[data-testid="stTable"] tbody td, .stDataFrame tbody td {
-    padding: 0.6rem 1rem !important;
-    border-bottom: 1px solid var(--border) !important;
-    color: var(--text-primary);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.79rem;
-    background: var(--surface);
+/* ══ Security grid ══ */
+.sec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.sec-panel {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--r8); padding: 0.9rem 1rem;
 }
-
-[data-testid="stTable"] tbody tr:nth-child(even) td,
-.stDataFrame tbody tr:nth-child(even) td {
-    background: var(--surface-2) !important;
+.sec-panel-title {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--txt3); margin-bottom: 8px;
 }
+.sec-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.sec-item:last-child { border-bottom: none; }
+.sec-ic { width: 24px; height: 24px; border-radius: 6px; background: var(--blue-lt); color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+.sl { font-size: 0.8rem; font-weight: 600; }
+.sd { font-size: 0.72rem; color: var(--txt2); margin-top: 1px; line-height: 1.4; }
 
-[data-testid="stTable"] tbody tr:hover td,
-.stDataFrame tbody tr:hover td {
-    background: var(--accent-light) !important;
+/* ══ Empty state ══ */
+.empty-state {
+    text-align: center; padding: 3.5rem 2rem;
+    background: var(--surface); border: 1.5px dashed var(--border-2);
+    border-radius: var(--r16); margin: 1rem 0;
 }
+.empty-icon  { font-size: 2.8rem; margin-bottom: 0.6rem; }
+.empty-title { font-size: 0.9rem; font-weight: 600; color: var(--txt2); }
+.empty-desc  { font-size: 0.76rem; color: var(--txt3); margin-top: 4px; }
 
-/* Buttons */
+/* ══ Streamlit overrides ══ */
+[data-testid="stMetric"] {
+    background: var(--surface) !important; border: 1px solid var(--border) !important;
+    border-radius: var(--r12) !important; padding: 1rem 1.25rem !important;
+    box-shadow: var(--sh) !important;
+}
+[data-testid="stMetricLabel"] { font-size: 0.67rem !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; font-weight: 700 !important; color: var(--txt3) !important; }
+[data-testid="stMetricValue"] { font-size: 1.65rem !important; font-weight: 700 !important; letter-spacing: -0.04em !important; color: var(--txt1) !important; }
+[data-testid="stMetricDelta"] { font-size: 0.72rem !important; }
+
 .stButton > button {
-    background: var(--accent);
-    color: #FAF7F4;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1.3rem;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    letter-spacing: 0.02em;
-    box-shadow: 0 1px 4px rgba(29,92,200,0.3);
+    background: var(--blue) !important; color: #fff !important;
+    border: none !important; border-radius: var(--r4) !important;
+    padding: 0.46rem 1.15rem !important; font-size: 0.81rem !important;
+    font-weight: 600 !important; letter-spacing: 0.01em !important;
+    box-shadow: 0 1px 3px rgba(66,99,235,.3) !important;
+    transition: all 0.15s ease !important;
 }
-.stButton > button:hover {
-    background: #154FA8;
-    box-shadow: 0 3px 12px rgba(29,92,200,0.35);
-    transform: translateY(-1px);
+.stButton > button:hover { background: var(--blue-dk) !important; box-shadow: 0 3px 10px rgba(66,99,235,.35) !important; transform: translateY(-1px) !important; }
+
+.stSuccess { background: var(--green-lt) !important; border: 1px solid #A7F3D0 !important; border-left: 3px solid var(--green) !important; border-radius: var(--r8) !important; font-size: 0.82rem !important; }
+.stInfo    { background: var(--blue-lt)  !important; border: 1px solid #C7D7FD !important; border-left: 3px solid var(--blue)  !important; border-radius: var(--r8) !important; font-size: 0.82rem !important; }
+.stWarning { background: var(--amber-lt) !important; border: 1px solid #FDE68A !important; border-left: 3px solid var(--amber) !important; border-radius: var(--r8) !important; font-size: 0.82rem !important; }
+.stError   { background: var(--red-lt)   !important; border: 1px solid #FEA3A0 !important; border-left: 3px solid var(--red)   !important; border-radius: var(--r8) !important; font-size: 0.82rem !important; }
+
+details { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r8) !important; box-shadow: var(--sh) !important; }
+summary  { font-size: 0.82rem !important; font-weight: 600 !important; color: var(--txt2) !important; }
+hr { border-color: var(--border) !important; margin: 1.3rem 0 !important; }
+
+.stTextInput input, .stNumberInput input {
+    background: var(--surface-2) !important; border: 1px solid var(--border-2) !important;
+    border-radius: var(--r4) !important; font-size: 0.83rem !important; color: var(--txt1) !important;
+}
+.stTextInput input:focus, .stNumberInput input:focus { border-color: var(--blue) !important; box-shadow: 0 0 0 3px rgba(66,99,235,.1) !important; }
+.stSelectbox > div > div, .stDateInput > div > div {
+    background: var(--surface-2) !important; border: 1px solid var(--border-2) !important; border-radius: var(--r4) !important;
 }
 
-/* Alerts */
-.stSuccess, .stInfo, .stWarning, .stError {
-    border-radius: var(--radius) !important;
-    font-size: 0.84rem !important;
+[data-testid="stDataFrame"] { border: 1px solid var(--border) !important; border-radius: var(--r8) !important; overflow: hidden !important; }
+[data-testid="stTable"] table, .stDataFrame table { font-size: 0.79rem; border-collapse: collapse; width: 100%; }
+[data-testid="stTable"] thead th, .stDataFrame thead th {
+    background: var(--surface-2) !important; color: var(--txt3) !important;
+    font-size: 0.67rem !important; font-weight: 700 !important; text-transform: uppercase !important;
+    letter-spacing: 0.08em !important; padding: 0.6rem 0.9rem !important;
+    border-bottom: 1px solid var(--border-2) !important;
 }
-.stSuccess { border-left: 4px solid var(--success) !important;  background: #EDF5F0 !important; border: 1px solid #C4DDD0 !important; }
-.stInfo    { border-left: 4px solid var(--accent) !important;   background: var(--accent-light) !important; border: 1px solid #E0C9B5 !important; }
-.stWarning { border-left: 4px solid var(--warning) !important;  background: #FDF5DC !important; border: 1px solid #E8D68A !important; }
-.stError   { border-left: 4px solid var(--danger) !important;   background: #FAEAEA !important; border: 1px solid #E0B0B0 !important; }
+[data-testid="stTable"] tbody td, .stDataFrame tbody td {
+    padding: 0.52rem 0.9rem !important; border-bottom: 1px solid var(--border) !important;
+    font-family: 'JetBrains Mono', monospace !important; font-size: 0.76rem !important; color: var(--txt1) !important;
+}
+[data-testid="stTable"] tbody tr:hover td, .stDataFrame tbody tr:hover td { background: var(--blue-lt) !important; }
 
-/* Expander */
-details {
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    padding: 0.3rem 0.5rem !important;
-    background: var(--surface);
-    box-shadow: var(--shadow);
-}
-summary { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+/* ══ Sidebar gone — tabs only ══ */
+[data-testid="stSidebar"] { display: none !important; }
+.main > div:first-child   { margin-left: 0 !important; }
 
-/* Divider */
-hr { border-color: var(--border) !important; margin: 2rem 0 !important; }
-
-/* Forms */
-.stTextInput input, .stNumberInput input, .stSelectbox select {
-    border: 1px solid var(--border-strong) !important;
-    border-radius: 8px !important;
-    font-size: 0.84rem !important;
-    font-family: 'DM Sans', sans-serif !important;
-    background: var(--surface) !important;
-    color: var(--text-primary) !important;
+/* ══ Tabs ══ */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0 !important; background: var(--surface) !important;
+    border: 1px solid var(--border) !important; border-radius: var(--r8) !important;
+    padding: 3px !important; box-shadow: var(--sh) !important; margin-bottom: 0 !important;
 }
-.stTextInput input:focus, .stNumberInput input:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(29,92,200,0.12) !important;
+.stTabs [data-baseweb="tab"] {
+    border-radius: 7px !important; padding: 0.42rem 0.95rem !important;
+    font-size: 0.78rem !important; font-weight: 500 !important;
+    color: var(--txt2) !important; background: transparent !important;
+    border: none !important; transition: all 0.12s !important;
+    white-space: nowrap !important;
 }
-
-/* Section header stripe */
-.section-badge {
-    display: inline-block;
-    background: var(--accent);
-    color: #FAF7F4;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-}
+.stTabs [data-baseweb="tab"]:hover { color: var(--txt1) !important; background: var(--surface-2) !important; }
+.stTabs [aria-selected="true"] { background: var(--blue) !important; color: #fff !important; box-shadow: 0 1px 4px rgba(66,99,235,.35) !important; font-weight: 600 !important; }
+.stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] { display: none !important; }
+.stTabs [data-baseweb="tab-panel"] { padding: 1.4rem 0 0 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Matplotlib style ──────────────────────────────────────────────────────────
-PALETTE = ["#1D5CC8", "#2B8AC4", "#3BA8D8", "#A83232", "#5A72D0", "#0E9E8A"]
+# ── Matplotlib ─────────────────────────────────────────────────────────────────
+PALETTE = ["#4263EB", "#12B76A", "#F59E0B", "#F04438", "#7C3AED", "#06B6D4"]
+BG_C = "#FFFFFF"
 mpl.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["DM Sans", "Helvetica Neue", "Arial"],
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "axes.spines.left": False,
-    "axes.spines.bottom": True,
-    "axes.grid": True,
-    "grid.color": "#C5D5EE",
-    "grid.linewidth": 0.7,
-    "grid.alpha": 0.7,
-    "axes.facecolor": "#F5F8FF",
-    "figure.facecolor": "#F5F8FF",
-    "axes.labelcolor": "#3B68B0",
-    "xtick.color": "#3B68B0",
-    "ytick.color": "#3B68B0",
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "axes.titlesize": 12,
-    "axes.titleweight": "600",
-    "axes.titlepad": 16,
-    "axes.edgecolor": "#C5D5EE",
-    "figure.dpi": 120,
+    "font.family": "sans-serif", "font.sans-serif": ["Inter", "Helvetica Neue", "Arial"],
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.spines.left": False, "axes.spines.bottom": False,
+    "axes.grid": True, "grid.color": "#E4E8F2", "grid.linewidth": 0.8,
+    "axes.facecolor": BG_C, "figure.facecolor": BG_C,
+    "axes.labelcolor": "#8A93B0", "xtick.color": "#8A93B0", "ytick.color": "#8A93B0",
+    "xtick.labelsize": 9, "ytick.labelsize": 9,
+    "axes.titlesize": 11, "axes.titleweight": "700", "axes.titlepad": 14,
+    "figure.dpi": 140,
 })
 
-# ── Data ──────────────────────────────────────────────────────────────────────
+# ── Data ───────────────────────────────────────────────────────────────────────
 def load_data():
-    file_path = 'sales_data.csv'
-    if not os.path.exists(file_path):
-        initial_data = pd.DataFrame({
-            "Date": ["2023-01-15", "2023-01-20"],
-            "Product_ID": ["P001", "P002"],
-            "Product Name": ["Laptop", "Mouse"],
-            "Category": ["IT", "IT"],
-            "Quantity": [10, 50],
-            "Unit Price": [25000, 500],
-            "Region": ["North", "South"]
-        })
-        initial_data.to_csv(file_path, index=False)
-    return pd.read_csv(file_path)
+    fp = 'sales_data.csv'
+    if not os.path.exists(fp):
+        pd.DataFrame({
+            "Date":         ["2023-01-15","2023-02-20","2023-03-10","2023-03-25",
+                             "2023-04-05","2023-05-18","2023-06-22","2023-07-08"],
+            "Product_ID":   ["P001","P002","P003","P001","P004","P002","P005","P003"],
+            "Product Name": ["Laptop","Mouse","Keyboard","Laptop","Monitor","Mouse","Headset","Keyboard"],
+            "Category":     ["IT","IT","IT","IT","IT","IT","IT","IT"],
+            "Quantity":     [10, 50, 30, 8, 5, 40, 20, 25],
+            "Unit Price":   [25000, 500, 800, 25000, 8000, 500, 1500, 800],
+            "Region":       ["North","South","Central","East","North","West","South","Central"],
+        }).to_csv(fp, index=False)
+    return pd.read_csv(fp)
 
 df = load_data()
 
-# ── Header ────────────────────────────────────────────────────────────────────
-st.markdown('<div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.2rem;"><span style="background:#1D5CC8;color:#F5F8FF;font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.55rem;border-radius:4px;">Dashboard</span></div>', unsafe_allow_html=True)
-st.title("Sales Analytics")
-st.markdown('<p style="color:#3B68B0;font-size:0.88rem;margin-top:-0.3rem;margin-bottom:1.5rem;border-bottom:1px solid #C5D5EE;padding-bottom:1.2rem;">โครงการทดสอบสมรรถนะรายปี · อาชีพนักวิเคราะห์ข้อมูล</p>', unsafe_allow_html=True)
+# ── Compute top-bar stats ──────────────────────────────────────────────────────
+total_sales = (pd.to_numeric(df['Quantity'],   errors='coerce').fillna(0) *
+               pd.to_numeric(df['Unit Price'],  errors='coerce').fillna(0)).sum()
+n_products  = df['Product Name'].nunique() if 'Product Name' in df.columns else 0
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.markdown('<p style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:#3B68B0;font-weight:500;margin-bottom:0.5rem;">เมนูหลัก</p>', unsafe_allow_html=True)
-menu = st.sidebar.radio("", [
-    "0. จัดการข้อมูล (เพิ่ม/ลบ)",
-    "1. ตรวจสอบคุณภาพข้อมูล",
-    "2. ทำความสะอาดข้อมูล",
-    "3. วิเคราะห์ข้อมูล",
-    "4. ความปลอดภัยข้อมูล",
-    "5. การแสดงผลข้อมูล (Visualization)"
-], label_visibility="collapsed")
+st.markdown(f"""
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">DF</div>
+    <div>
+      <span class="brand-name">DataFlow</span>
+      <span class="brand-sep">·</span>
+      <span class="brand-sub">Sales Analytics Dashboard</span>
+    </div>
+  </div>
+  <div class="topbar-pills">
+    <span class="pill p-blue">📁 {len(df):,} รายการ</span>
+    <span class="pill p-green">฿ {total_sales:,.0f}</span>
+    <span class="pill p-amber">🏷 {n_products} สินค้า</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-# ── Section 0: Manage Data ────────────────────────────────────────────────────
-if menu == "0. จัดการข้อมูล (เพิ่ม/ลบ)":
-    st.subheader("จัดการฐานข้อมูล")
+# ── Tabs ───────────────────────────────────────────────────────────────────────
+tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "⊞ จัดการข้อมูล",
+    "⊙ ตรวจสอบคุณภาพ",
+    "⊘ ทำความสะอาด",
+    "⊛ วิเคราะห์",
+    "⊜ ความปลอดภัย",
+    "⊝ Visualization",
+])
 
-    with st.expander("➕  เพิ่มข้อมูลยอดขายใหม่"):
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 0 — จัดการข้อมูล
+# ══════════════════════════════════════════════════════════════════════════════
+with tab0:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#EDF0FF;">⊞</div>
+      <div>
+        <div class="ph-title">จัดการฐานข้อมูล</div>
+        <div class="ph-desc">เพิ่ม · ลบ รายการยอดขายในระบบ</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+    col_a, col_b = st.columns([3, 2], gap="large")
+
+    with col_a:
+        st.markdown('<div class="card"><div class="ct"><span class="ct-dot"></span>เพิ่มรายการใหม่</div>', unsafe_allow_html=True)
         with st.form("add_form", clear_on_submit=True):
-            c1, c2, c3 = st.columns(3)
-            new_date  = c1.date_input("วันที่ขาย")
-            new_id    = c2.text_input("รหัสสินค้า")
-            new_name  = c3.text_input("ชื่อสินค้า")
-            new_cat   = c1.selectbox("หมวดหมู่", ["IT", "Furniture", "Electronics"])
-            new_qty   = c2.number_input("จำนวน", min_value=1)
-            new_price = c3.number_input("ราคาต่อหน่วย", min_value=1)
-            new_reg   = c1.selectbox("ภูมิภาค", ["North", "South", "Central", "East", "West"])
-            if st.form_submit_button("บันทึกข้อมูล"):
-                new_row = pd.DataFrame([[str(new_date), new_id, new_name, new_cat, new_qty, new_price, new_reg]],
-                                       columns=df.columns)
+            r1, r2 = st.columns(3), st.columns(3)
+            new_date  = r1[0].date_input("วันที่ขาย")
+            new_id    = r1[1].text_input("รหัสสินค้า", placeholder="P001")
+            new_name  = r1[2].text_input("ชื่อสินค้า",  placeholder="Laptop")
+            new_cat   = r2[0].selectbox("หมวดหมู่",   ["IT","Furniture","Electronics"])
+            new_qty   = r2[1].number_input("จำนวน",    min_value=1, value=1)
+            new_price = r2[2].number_input("ราคา/หน่วย", min_value=1, value=100)
+            new_reg   = st.selectbox("ภูมิภาค", ["North","South","Central","East","West"])
+            if st.form_submit_button("＋  บันทึกข้อมูล", use_container_width=True):
+                new_row = pd.DataFrame([[str(new_date), new_id, new_name, new_cat, new_qty, new_price, new_reg]], columns=df.columns)
                 df = pd.concat([df, new_row], ignore_index=True)
                 df.to_csv('sales_data.csv', index=False)
-                st.success("บันทึกข้อมูลสำเร็จ!")
+                st.success(f"✓ เพิ่ม **{new_name}** สำเร็จ")
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    with st.expander("🗑️  ลบข้อมูลที่ไม่ต้องการ"):
-        st.dataframe(df, use_container_width=True)
-        delete_idx = st.number_input("ระบุเลขลำดับที่ต้องการลบ", min_value=0, max_value=len(df)-1, step=1)
-        if st.button("ยืนยันการลบ"):
-            df = df.drop(df.index[delete_idx])
+    with col_b:
+        st.markdown('<div class="card"><div class="ct"><span class="ct-dot" style="background:var(--red)"></span>ลบรายการ</div>', unsafe_allow_html=True)
+        st.dataframe(
+            df[['Product Name','Quantity','Unit Price','Region']].reset_index().rename(columns={"index":"#"}),
+            use_container_width=True, height=200
+        )
+        del_idx = st.number_input("เลือกเลขลำดับ (#) ที่ต้องการลบ", min_value=0, max_value=max(len(df)-1,0), step=1)
+        preview = df.iloc[del_idx]['Product Name'] if len(df) > 0 else "—"
+        st.markdown(f'<div style="background:var(--red-lt);border:1px solid #FEA3A0;border-radius:8px;padding:8px 12px;font-size:0.77rem;color:#B42318;margin:4px 0 8px 0;">⚠ จะลบ: <strong>{preview}</strong> (แถว #{del_idx})</div>', unsafe_allow_html=True)
+        if st.button("🗑  ยืนยันการลบ", use_container_width=True):
+            df = df.drop(df.index[del_idx]).reset_index(drop=True)
             df.to_csv('sales_data.csv', index=False)
-            st.warning("ลบข้อมูลเรียบร้อยแล้ว")
+            st.warning("ลบแล้ว")
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Section 1: Quality Check ──────────────────────────────────────────────────
-elif menu == "1. ตรวจสอบคุณภาพข้อมูล":
-    st.subheader("ตรวจสอบคุณภาพข้อมูล")
+    st.markdown('<div class="ct" style="margin-top:0.4rem;"><span class="ct-dot"></span>ข้อมูลทั้งหมดในระบบ</div>', unsafe_allow_html=True)
+    st.dataframe(df, use_container_width=True)
 
-    if st.button("เริ่มตรวจสอบ"):
-        # Missing values
-        st.markdown("**Missing Values**")
-        null_rows = df[df.isnull().any(axis=1)]
-        if not null_rows.empty:
-            st.error(f"พบข้อมูลไม่สมบูรณ์ {len(null_rows)} แถว")
-            st.dataframe(null_rows, use_container_width=True)
-        else:
-            st.success("ข้อมูลทุกแถวครบถ้วน")
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1 — ตรวจสอบคุณภาพ
+# ══════════════════════════════════════════════════════════════════════════════
+with tab1:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#ECFDF5;">⊙</div>
+      <div>
+        <div class="ph-title">ตรวจสอบคุณภาพข้อมูล</div>
+        <div class="ph-desc">สแกนหา Missing Values · Duplicates · ชนิดข้อมูล</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
-        st.divider()
+    null_rows = df[df.isnull().any(axis=1)]
+    dup_rows  = df[df.duplicated(keep=False)]
+    n_null    = len(null_rows)
+    n_dup     = len(df[df.duplicated()])
+    score     = max(0, min(100, 100 - (n_null + n_dup) * 5))
 
-        # Duplicates
-        st.markdown("**ข้อมูลซ้ำ (Duplicates)**")
-        dup_rows = df[df.duplicated(keep=False)]
-        if not dup_rows.empty:
-            st.warning(f"พบข้อมูลซ้ำ {len(df[df.duplicated()])} รายการ")
-            st.dataframe(dup_rows.sort_values(by=list(df.columns)), use_container_width=True)
-        else:
-            st.success("ไม่พบข้อมูลซ้ำ")
+    kc1, kc2, kc3, kc4 = st.columns(4)
+    kc1.metric("แถวทั้งหมด",         f"{len(df):,}")
+    kc2.metric("Missing Values",      f"{n_null}",  delta="ปกติ" if n_null == 0 else f"⚠ {n_null} แถว")
+    kc3.metric("Duplicates",          f"{n_dup}",   delta="ปกติ" if n_dup  == 0 else f"⚠ {n_dup} รายการ")
+    kc4.metric("Data Quality Score",  f"{score}/100")
 
-        st.divider()
+    st.markdown("---")
+    if st.button("▶  เริ่มตรวจสอบ"):
+        q1, q2 = st.columns(2, gap="large")
+        with q1:
+            st.markdown('<div class="ct"><span class="ct-dot"></span>Missing Values</div>', unsafe_allow_html=True)
+            if null_rows.empty: st.success("✓ ข้อมูลครบถ้วนทุกแถว")
+            else: st.error(f"พบ {n_null} แถวที่ขาดข้อมูล"); st.dataframe(null_rows, use_container_width=True)
+        with q2:
+            st.markdown('<div class="ct"><span class="ct-dot" style="background:var(--amber)"></span>Duplicates</div>', unsafe_allow_html=True)
+            if dup_rows.empty: st.success("✓ ไม่พบข้อมูลซ้ำ")
+            else: st.warning(f"พบ {n_dup} รายการซ้ำ"); st.dataframe(dup_rows.sort_values(by=list(df.columns)), use_container_width=True)
 
-        # Data types
-        st.markdown("**ชนิดข้อมูลรายช่อง**")
+        st.markdown('<div class="ct" style="margin-top:1rem;"><span class="ct-dot" style="background:var(--purple)"></span>ชนิดข้อมูลรายคอลัมน์</div>', unsafe_allow_html=True)
         def check_type(v): return type(v).__name__
         st.dataframe(df.applymap(check_type), use_container_width=True)
-        st.info("หากคอลัมน์ตัวเลขแสดงผลเป็น `str` แสดงว่าแถวนั้นมีชนิดข้อมูลผิดพลาด")
+        st.info("คอลัมน์ตัวเลขที่แสดงเป็น `str` = ชนิดข้อมูลผิดพลาด ควรแก้ไขก่อนวิเคราะห์")
 
-# ── Section 2: Data Cleaning ──────────────────────────────────────────────────
-elif menu == "2. ทำความสะอาดข้อมูล":
-    st.subheader("ทำความสะอาดข้อมูล")
-    st.info("เกณฑ์: ลบซ้ำ · กรองค่าติดลบ · แปลงรูปแบบวันที่")
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2 — ทำความสะอาด
+# ══════════════════════════════════════════════════════════════════════════════
+with tab2:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#FFFBEB;">⊘</div>
+      <div>
+        <div class="ph-title">ทำความสะอาดข้อมูล</div>
+        <div class="ph-desc">ลบซ้ำ · กรองค่าผิดพลาด · แปลงรูปแบบวันที่</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
-    if st.button("เริ่มทำความสะอาด"):
-        df_before = df.copy()
+    st.markdown("""
+    <div class="card">
+      <div class="ct"><span class="ct-dot"></span>ขั้นตอน (Pipeline)</div>
+      <div class="wf-step">
+        <div class="wf-num">1</div>
+        <div><div class="wf-title">Deduplication</div><div class="wf-desc">ตรวจจับและลบแถวที่มีข้อมูลซ้ำกันทุกฟิลด์</div></div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">2</div>
+        <div><div class="wf-title">Outlier Filter</div><div class="wf-desc">ลบแถวที่ Quantity ≤ 0 หรือ Unit Price ≤ 0</div></div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">3</div>
+        <div><div class="wf-title">Date Parsing</div><div class="wf-desc">แปลง Date → datetime64 และลบแถวที่ไม่สามารถแปลงได้</div></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        dup_rows          = df_before[df_before.duplicated()]
-        df_clean          = df_before.drop_duplicates()
-        wrong_fmt         = df_clean[(df_clean['Quantity'] <= 0) | (df_clean['Unit Price'] <= 0)]
-        df_clean          = df_clean[(df_clean['Quantity'] > 0) & (df_clean['Unit Price'] > 0)]
-        invalid_date_rows = df_clean[pd.to_datetime(df_clean['Date'], errors='coerce').isna()]
-        df_clean['Date']  = pd.to_datetime(df_clean['Date'], errors='coerce')
-        df_clean          = df_clean.dropna(subset=['Date'])
+    if st.button("▶  เริ่มทำความสะอาด"):
+        df_b    = df.copy()
+        dup_r   = df_b[df_b.duplicated()]
+        df_c    = df_b.drop_duplicates()
+        wrong_r = df_c[(pd.to_numeric(df_c['Quantity'],  errors='coerce') <= 0) |
+                       (pd.to_numeric(df_c['Unit Price'], errors='coerce') <= 0)]
+        df_c    = df_c[(pd.to_numeric(df_c['Quantity'],  errors='coerce') > 0) &
+                       (pd.to_numeric(df_c['Unit Price'], errors='coerce') > 0)]
+        inv_d   = df_c[pd.to_datetime(df_c['Date'], errors='coerce').isna()]
+        df_c['Date'] = pd.to_datetime(df_c['Date'], errors='coerce')
+        df_c    = df_c.dropna(subset=['Date'])
+        st.session_state['df_clean'] = df_c
 
-        st.session_state['df_clean'] = df_clean
-        st.success("ทำความสะอาดเสร็จสิ้น")
+        st.success(f"✓ ทำความสะอาดเสร็จสิ้น — ข้อมูลพร้อมใช้งาน **{len(df_c):,}** แถว")
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("เริ่มต้น",          f"{len(df_b):,} แถว")
+        r2.metric("ลบซ้ำ",            f"−{len(dup_r)}")
+        r3.metric("ลบค่าผิดพลาด",     f"−{len(wrong_r)}")
+        r4.metric("พร้อมใช้งาน",       f"{len(df_c):,} แถว")
+        with st.expander("ดูรายละเอียดที่ถูกลบ"):
+            if not dup_r.empty:  st.markdown("**ซ้ำ:**");   st.dataframe(dup_r,   use_container_width=True)
+            if not wrong_r.empty:st.markdown("**ผิดพลาด:**");st.dataframe(wrong_r, use_container_width=True)
+            if not inv_d.empty:  st.markdown("**วันที่:**"); st.dataframe(inv_d,   use_container_width=True)
+        st.markdown("**ข้อมูลพร้อมใช้งาน**")
+        st.dataframe(df_c, use_container_width=True)
 
-        c1, c2, c3 = st.columns(3)
-        c1.metric("ข้อมูลซ้ำที่ลบ",         f"{len(dup_rows)} แถว")
-        c2.metric("ข้อมูลผิดรูปแบบที่ลบ",   f"{len(wrong_fmt)} แถว")
-        c3.metric("วันที่ผิดพลาดที่ลบ",      f"{len(invalid_date_rows)} แถว")
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3 — วิเคราะห์
+# ══════════════════════════════════════════════════════════════════════════════
+with tab3:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#F5F3FF;">⊛</div>
+      <div>
+        <div class="ph-title">วิเคราะห์ข้อมูลเชิงธุรกิจ</div>
+        <div class="ph-desc">Monthly Trend · Top Products · Regional Performance</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
-        with st.expander("รายละเอียดรายการที่ถูกลบ"):
-            if not dup_rows.empty:
-                st.markdown("**ข้อมูลซ้ำ:**"); st.dataframe(dup_rows, use_container_width=True)
-            if not wrong_fmt.empty:
-                st.markdown("**จำนวน/ราคาติดลบ:**"); st.dataframe(wrong_fmt, use_container_width=True)
-            if not invalid_date_rows.empty:
-                st.markdown("**วันที่ผิดรูปแบบ:**"); st.dataframe(invalid_date_rows, use_container_width=True)
-
-        st.markdown("**ข้อมูลที่พร้อมใช้งาน**")
-        st.dataframe(df_clean, use_container_width=True)
-
-# ── Section 3: Analysis ───────────────────────────────────────────────────────
-elif menu == "3. วิเคราะห์ข้อมูล":
-    st.subheader("วิเคราะห์ข้อมูลเพื่อหาข้อสรุปเชิงธุรกิจ")
-
-    if 'df_clean' in st.session_state:
-        data = st.session_state['df_clean'].copy()
-        data['Total_Sales'] = data['Quantity'] * data['Unit Price']
-
-        st.markdown("**ยอดขายรวมต่อเดือน**")
-        data['Month']    = data['Date'].dt.to_period('M').astype(str)
-        monthly_sales    = data.groupby('Month')['Total_Sales'].sum().reset_index()
-        st.table(monthly_sales)
-
-        st.divider()
-
-        st.markdown("**สินค้าขายดีที่สุด 5 อันดับ**")
-        top_products = data.groupby('Product Name')['Quantity'].sum().sort_values(ascending=False).head(5).reset_index()
-        st.table(top_products)
-
-        st.divider()
-
-        st.markdown("**ยอดขายตามภูมิภาค**")
-        region_sales = data.groupby('Region')['Total_Sales'].sum().reset_index()
-        st.table(region_sales)
-
-        st.divider()
-
-        best_region  = region_sales.loc[region_sales['Total_Sales'].idxmax(), 'Region']
-        best_product = top_products.loc[0, 'Product Name']
-        st.success(f"""**ข้อเสนอแนะเชิงธุรกิจ:**  
-- ควรทำโปรโมชั่นพ่วงสำหรับ **{best_product}** (สินค้าขายดีอันดับ 1)  
-- ทุ่มงบโฆษณาในภูมิภาค **{best_region}** (ยอดซื้อสูงสุด)  
-- เตรียมสต็อกล่วงหน้า 1 เดือนตามแนวโน้มรายเดือน""")
+    if 'df_clean' not in st.session_state:
+        st.markdown('<div class="empty-state"><div class="empty-icon">⊛</div><div class="empty-title">ยังไม่มีข้อมูลที่ผ่านการทำความสะอาด</div><div class="empty-desc">ไปที่แท็บ "ทำความสะอาด" แล้วกดเริ่มก่อนนะครับ</div></div>', unsafe_allow_html=True)
     else:
-        st.warning("กรุณาดำเนินการ 'ทำความสะอาดข้อมูล' ในขั้นตอนที่ 2 ก่อน")
-
-# ── Section 4: Security ───────────────────────────────────────────────────────
-elif menu == "4. ความปลอดภัยข้อมูล":
-    st.subheader("ออกแบบความปลอดภัยข้อมูล")
-
-    st.markdown("**การกำหนดสิทธิ์ (RBAC)**")
-    st.table(pd.DataFrame([
-        {"บทบาท": "Admin (ไอที)",          "สิทธิ์": "ดู / เพิ่ม / แก้ไข / ลบ / จัดการผู้ใช้",  "ระดับ": "สูงสุด"},
-        {"บทบาท": "Analyst (นักวิเคราะห์)", "สิทธิ์": "ดูข้อมูล ทำความสะอาด วิเคราะห์",          "ระดับ": "ปานกลาง"},
-        {"บทบาท": "Viewer (ผู้บริหาร)",    "สิทธิ์": "ดูรายงานสรุปและ Dashboard เท่านั้น",       "ระดับ": "เริ่มต้น"},
-    ]))
-
-    st.divider()
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("**การป้องกันเชิงเทคนิค**\n\n- **Encryption** เข้ารหัสไฟล์ขณะจัดเก็บ\n- **MFA** ยืนยันตัวตน 2 ชั้น\n- **Audit Logs** บันทึกทุกกิจกรรม")
-    with col2:
-        st.info("**การป้องกันเชิงบริหาร**\n\n- **NDA** สัญญาไม่เปิดเผยข้อมูล\n- **Privacy Policy** สอดคล้อง PDPA\n- **Training** อบรม Cyber Security")
-
-    st.success("แนวทางนี้สอดคล้องกับมาตรฐานความปลอดภัยข้อมูลระดับ 4")
-
-# ── Section 5: Visualization ──────────────────────────────────────────────────
-elif menu == "5. การแสดงผลข้อมูล (Visualization)":
-    st.subheader("การแสดงผลข้อมูล")
-
-    if 'df_clean' in st.session_state:
         data = st.session_state['df_clean'].copy()
-        data['Total_Sales'] = data['Quantity'] * data['Unit Price']
-        data['Month']       = data['Date'].dt.to_period('M').astype(str)
+        data['Total_Sales'] = pd.to_numeric(data['Quantity'], errors='coerce') * pd.to_numeric(data['Unit Price'], errors='coerce')
+        data['Month'] = data['Date'].dt.to_period('M').astype(str)
+        monthly  = data.groupby('Month')['Total_Sales'].sum().reset_index()
+        top5     = data.groupby('Product Name')['Quantity'].sum().sort_values(ascending=False).head(5).reset_index()
+        region   = data.groupby('Region')['Total_Sales'].sum().sort_values(ascending=False).reset_index()
+        best_r   = region.iloc[0]['Region']
+        best_p   = top5.iloc[0]['Product Name']
+        total    = data['Total_Sales'].sum()
+        avg_mo   = monthly['Total_Sales'].mean()
 
-        # ── Line chart ────────────────────────────────────────────────────────
-        st.markdown("**แนวโน้มยอดขายรายเดือน**")
+        kc1, kc2, kc3, kc4 = st.columns(4)
+        kc1.metric("ยอดขายรวม",         f"฿{total:,.0f}")
+        kc2.metric("เฉลี่ย/เดือน",      f"฿{avg_mo:,.0f}")
+        kc3.metric("ภูมิภาคนำ",          best_r)
+        kc4.metric("สินค้าขายดีอันดับ 1", best_p)
+        st.markdown("---")
+
+        a1, a2, a3 = st.columns([2, 2, 2], gap="medium")
+        with a1:
+            st.markdown('<div class="ct"><span class="ct-dot"></span>ยอดขายรายเดือน</div>', unsafe_allow_html=True)
+            st.table(monthly.rename(columns={"Month":"เดือน","Total_Sales":"ยอดขาย (฿)"}))
+        with a2:
+            st.markdown('<div class="ct"><span class="ct-dot" style="background:var(--green)"></span>สินค้าขายดี Top 5</div>', unsafe_allow_html=True)
+            st.table(top5.rename(columns={"Product Name":"สินค้า","Quantity":"จำนวน"}))
+        with a3:
+            st.markdown('<div class="ct"><span class="ct-dot" style="background:var(--amber)"></span>ยอดขายตามภูมิภาค</div>', unsafe_allow_html=True)
+            st.table(region.rename(columns={"Region":"ภูมิภาค","Total_Sales":"ยอดขาย (฿)"}))
+
+        st.success(f"**ข้อเสนอแนะเชิงธุรกิจ** — ทำโปรโมชั่น **{best_p}** · เพิ่มงบในภูมิภาค **{best_r}** · เตรียมสต็อกล่วงหน้า 1 เดือน")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4 — ความปลอดภัย
+# ══════════════════════════════════════════════════════════════════════════════
+with tab4:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#FEF3F2;">⊜</div>
+      <div>
+        <div class="ph-title">ออกแบบความปลอดภัยข้อมูล</div>
+        <div class="ph-desc">RBAC · Technical Controls · PDPA Compliance</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+    s1, s2 = st.columns([5, 7], gap="large")
+
+    with s1:
+        st.markdown("""
+        <div class="card">
+          <div class="ct"><span class="ct-dot" style="background:var(--red)"></span>Role-Based Access Control</div>
+          <div class="role-row">
+            <div class="role-av" style="background:#FEE2E2;">🔐</div>
+            <div style="flex:1"><div class="rn">Admin (ไอที)</div><div class="rp">ดู · เพิ่ม · แก้ไข · ลบ · จัดการผู้ใช้</div></div>
+            <span class="pill p-red">สูงสุด</span>
+          </div>
+          <div class="role-row">
+            <div class="role-av" style="background:#DBEAFE;">📊</div>
+            <div style="flex:1"><div class="rn">Analyst (นักวิเคราะห์)</div><div class="rp">ดู · ทำความสะอาด · วิเคราะห์</div></div>
+            <span class="pill p-blue">กลาง</span>
+          </div>
+          <div class="role-row">
+            <div class="role-av" style="background:#D1FAE5;">👁</div>
+            <div style="flex:1"><div class="rn">Viewer (ผู้บริหาร)</div><div class="rp">ดูรายงานและ Dashboard เท่านั้น</div></div>
+            <span class="pill p-green">ต่ำ</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with s2:
+        st.markdown("""
+        <div class="card">
+          <div class="ct"><span class="ct-dot" style="background:var(--purple)"></span>มาตรการป้องกัน</div>
+          <div class="sec-grid">
+            <div class="sec-panel">
+              <div class="sec-panel-title">🔧 เชิงเทคนิค</div>
+              <div class="sec-item"><div class="sec-ic">🔒</div><div><div class="sl">Encryption AES-256</div><div class="sd">เข้ารหัสข้อมูลขณะจัดเก็บและส่ง</div></div></div>
+              <div class="sec-item"><div class="sec-ic">📱</div><div><div class="sl">MFA (TOTP/SMS)</div><div class="sd">ยืนยันตัวตน 2 ชั้นทุก session</div></div></div>
+              <div class="sec-item"><div class="sec-ic">📋</div><div><div class="sl">Audit Logs</div><div class="sd">บันทึกทุก action + timestamp + IP</div></div></div>
+            </div>
+            <div class="sec-panel">
+              <div class="sec-panel-title">📋 เชิงบริหาร</div>
+              <div class="sec-item"><div class="sec-ic" style="background:var(--green-lt);color:var(--green)">📝</div><div><div class="sl">NDA Agreement</div><div class="sd">สัญญาไม่เปิดเผยข้อมูลพนักงานทุกคน</div></div></div>
+              <div class="sec-item"><div class="sec-ic" style="background:var(--green-lt);color:var(--green)">🏛</div><div><div class="sl">PDPA Compliance</div><div class="sd">สอดคล้อง พ.ร.บ. คุ้มครองข้อมูลฯ</div></div></div>
+              <div class="sec-item"><div class="sec-ic" style="background:var(--green-lt);color:var(--green)">🎓</div><div><div class="sl">Security Training</div><div class="sd">อบรม Cyber Awareness รายปี</div></div></div>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.success("✓ มาตรฐานนี้สอดคล้องกับ ISO/IEC 27001 · PDPA · NIST Cybersecurity Framework")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 5 — Visualization
+# ══════════════════════════════════════════════════════════════════════════════
+with tab5:
+    st.markdown("""
+    <div class="ph">
+      <div class="ph-icon" style="background:#EDF0FF;">⊝</div>
+      <div>
+        <div class="ph-title">Data Visualization</div>
+        <div class="ph-desc">Monthly Trend · Regional Comparison · Top Products</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+    if 'df_clean' not in st.session_state:
+        st.markdown('<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">ยังไม่มีข้อมูลที่พร้อมแสดงผล</div><div class="empty-desc">ไปที่แท็บ "ทำความสะอาด" แล้วกดเริ่มก่อน</div></div>', unsafe_allow_html=True)
+    else:
+        data = st.session_state['df_clean'].copy()
+        data['Total_Sales'] = pd.to_numeric(data['Quantity'], errors='coerce') * pd.to_numeric(data['Unit Price'], errors='coerce')
+        data['Month'] = data['Date'].dt.to_period('M').astype(str)
         monthly_trend = data.groupby('Month')['Total_Sales'].sum().reset_index()
+        region_comp   = data.groupby('Region')['Total_Sales'].sum().sort_values(ascending=False).reset_index()
+        top5_prod     = data.groupby('Product Name')['Quantity'].sum().sort_values(ascending=False).head(5).reset_index()
 
-        fig1, ax1 = plt.subplots(figsize=(10, 4))
-        ax1.plot(monthly_trend['Month'], monthly_trend['Total_Sales'],
-                 color=PALETTE[0], linewidth=2.5, marker='o',
-                 markersize=7, markerfacecolor='#F5F8FF',
-                 markeredgewidth=2.5, markeredgecolor=PALETTE[0], zorder=5)
-        ax1.fill_between(monthly_trend['Month'], monthly_trend['Total_Sales'],
-                         alpha=0.12, color=PALETTE[0])
-        ax1.set_title("Monthly Sales Trend", loc='left', color='#1A3A6E')
-        ax1.set_ylabel("Sales (Baht)", labelpad=12)
-        ax1.set_xlabel("")
-        ax1.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-        fig1.patch.set_facecolor('#F5F8FF')
-        ax1.set_facecolor('#F5F8FF')
-        plt.tight_layout(pad=1.5)
-        st.pyplot(fig1, use_container_width=True)
+        vc1, vc2 = st.columns(2, gap="large")
 
-        st.divider()
+        with vc1:
+            st.markdown('<div class="ct"><span class="ct-dot"></span>แนวโน้มยอดขายรายเดือน</div>', unsafe_allow_html=True)
+            fig1, ax1 = plt.subplots(figsize=(5.8, 3.4))
+            x = range(len(monthly_trend))
+            ax1.plot(x, monthly_trend['Total_Sales'],
+                     color=PALETTE[0], linewidth=2.4, marker='o',
+                     markersize=6, markerfacecolor=BG_C, markeredgewidth=2.4, markeredgecolor=PALETTE[0], zorder=5)
+            ax1.fill_between(x, monthly_trend['Total_Sales'], alpha=0.08, color=PALETTE[0])
+            ax1.set_xticks(x)
+            ax1.set_xticklabels(monthly_trend['Month'], rotation=30, ha='right', fontsize=8)
+            ax1.set_title("Monthly Sales Trend", loc='left', color='#0C1023')
+            ax1.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"฿{v/1000:.0f}K"))
+            plt.tight_layout(pad=1.2)
+            st.pyplot(fig1, use_container_width=True)
 
-        # ── Bar chart ─────────────────────────────────────────────────────────
-        st.markdown("**ยอดขายตามภูมิภาค**")
-        region_comp = data.groupby('Region')['Total_Sales'].sum().sort_values(ascending=False).reset_index()
+        with vc2:
+            st.markdown('<div class="ct"><span class="ct-dot" style="background:var(--green)"></span>ยอดขายตามภูมิภาค</div>', unsafe_allow_html=True)
+            fig2, ax2 = plt.subplots(figsize=(5.8, 3.4))
+            colors = [PALETTE[1]] + [PALETTE[0]] * (len(region_comp)-1)
+            bars = ax2.bar(region_comp['Region'], region_comp['Total_Sales'],
+                           color=colors, width=0.48, zorder=3, edgecolor=BG_C, linewidth=1)
+            ax2.set_title("Sales by Region", loc='left', color='#0C1023')
+            ax2.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"฿{v/1000:.0f}K"))
+            for b in bars:
+                ax2.text(b.get_x() + b.get_width()/2, b.get_height()*1.03,
+                         f"฿{b.get_height():,.0f}", ha='center', va='bottom', fontsize=7.5, color='#4A5478', fontweight='600')
+            plt.tight_layout(pad=1.2)
+            st.pyplot(fig2, use_container_width=True)
 
-        fig2, ax2 = plt.subplots(figsize=(8, 4))
-        bar_colors = [PALETTE[1]] + [PALETTE[0]] * (len(region_comp) - 1)
-        bars = ax2.bar(region_comp['Region'], region_comp['Total_Sales'],
-                       color=bar_colors, width=0.52, zorder=3,
-                       edgecolor='#F5F8FF', linewidth=0.8)
-        ax2.set_title("Sales by Region", loc='left', color='#1A3A6E')
-        ax2.set_ylabel("Total Sales (Baht)", labelpad=12)
-        ax2.set_xlabel("")
-        ax2.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-        for bar in bars:
-            ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.025,
-                     f"{bar.get_height():,.0f}", ha='center', va='bottom',
-                     fontsize=8.5, color='#3B68B0', fontweight='600')
-        fig2.patch.set_facecolor('#F5F8FF')
-        ax2.set_facecolor('#F5F8FF')
-        plt.tight_layout(pad=1.5)
-        st.pyplot(fig2, use_container_width=True)
+        st.markdown('<div class="ct" style="margin-top:0.5rem;"><span class="ct-dot" style="background:var(--amber)"></span>สินค้าขายดี Top 5</div>', unsafe_allow_html=True)
+        fig3, ax3 = plt.subplots(figsize=(10, 2.8))
+        c3 = [PALETTE[2]] + [PALETTE[0]] * (len(top5_prod)-1)
+        bars3 = ax3.barh(top5_prod['Product Name'][::-1], top5_prod['Quantity'][::-1],
+                         color=c3[::-1], height=0.46, zorder=3, edgecolor=BG_C)
+        ax3.set_title("Top 5 Products by Quantity Sold", loc='left', color='#0C1023')
+        for b in bars3:
+            ax3.text(b.get_width() + 0.3, b.get_y() + b.get_height()/2,
+                     f"{b.get_width():.0f} ชิ้น", va='center', fontsize=8.5, color='#4A5478', fontweight='600')
+        plt.tight_layout(pad=1.2)
+        st.pyplot(fig3, use_container_width=True)
 
-        st.divider()
-
-        best_region  = region_comp.loc[0, 'Region']
-        best_product = data.groupby('Product Name')['Quantity'].sum().idxmax()
-        st.success(f"""**Executive Summary**  
-- แนวโน้มรายเดือน: วิเคราะห์จากกราฟเส้นด้านบน  
-- ภูมิภาคหลัก: **{best_region}** มียอดขายสูงสุด (แท่งสีเขียว)  
-- แผนงานถัดไป: จัดโปรโมชั่น **{best_product}** ในช่วง Peak Month""")
-    else:
-        st.warning("กรุณาดำเนินการ 'ทำความสะอาดข้อมูล' ในขั้นตอนที่ 2 ก่อน")
+        best_r = region_comp.iloc[0]['Region']
+        best_p = top5_prod.iloc[0]['Product Name']
+        st.success(f"**Executive Summary** — ภูมิภาคหลัก: **{best_r}** · สินค้าอันดับ 1: **{best_p}** · เตรียมสต็อกล่วงหน้าตาม Peak Month")
