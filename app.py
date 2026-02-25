@@ -19,9 +19,9 @@ st.markdown("""
     --surface-2: #F7F8FC;
     --border:    #E4E8F2;
     --border-2:  #CDD3E8;
-    --txt1:      #0C1023;
-    --txt2:      #4A5478;
-    --txt3:      #8A93B0;
+    --txt1:      #000000;
+    --txt2:      #000000;
+    --txt3:      #000000;
     --blue:      #4263EB;
     --blue-lt:   #EDF0FF;
     --blue-dk:   #3151CC;
@@ -636,4 +636,5 @@ with tab5:
 
         best_r = region_comp.iloc[0]['Region']
         best_p = top5_prod.iloc[0]['Product Name']
+
         st.success(f"**Executive Summary** — ภูมิภาคหลัก: **{best_r}** · สินค้าอันดับ 1: **{best_p}** · เตรียมสต็อกล่วงหน้าตาม Peak Month")
