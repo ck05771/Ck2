@@ -15,8 +15,8 @@ st.markdown("""
 
 :root {
     --bg:        #F0F2F8;
-    --surface:   #2C2418;
-    --surface-2: #F7F8FC;
+    --surface:   #FFFFFF;
+    --surface-2: #2C2418;
     --border:    #E4E8F2;
     --border-2:  #CDD3E8;
     --txt1:      #0C1023;
