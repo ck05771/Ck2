@@ -28,9 +28,9 @@ st.markdown("""
     --green-lt:  #ECFDF5;
     --amber:     #F59E0B;
     --amber-lt:  #FFFBEB;
-    --red:       #F04438;
-    --red-lt:    #FEF3F2;
-    --purple:    #7C3AED;
+    --red:       #000000;
+    --red-lt:    #000000;
+    --purple:    #000000;
     --r4: 6px; --r8: 10px; --r12: 14px; --r16: 18px;
     --sh:  0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
     --sh2: 0 4px 16px rgba(0,0,0,.08);
