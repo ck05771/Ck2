@@ -15,23 +15,23 @@ st.markdown("""
 
 :root {
     --bg:        #F0F2F8;
-    --surface:   #000000;
-    --surface-2: #000000;
-    --border:    #000000;
-    --border-2:  #000000;
-    --txt1:      #000000;
-    --txt2:      #000000;
-    --txt3:      #000000;
-    --blue:      #000000;
-    --blue-lt:   #000000;
-    --blue-dk:   #000000;
-    --green:     #000000;
-    --green-lt:  #000000;
-    --amber:     #000000;
-    --amber-lt:  #000000;
-    --red:       #000000;
-    --red-lt:    #000000;
-    --purple:    #000000;
+    --surface:   #FFFFFF;
+    --surface-2: #F7F8FC;
+    --border:    #E4E8F2;
+    --border-2:  #CDD3E8;
+    --txt1:      #0C1023;
+    --txt2:      #4A5478;
+    --txt3:      #8A93B0;
+    --blue:      #4263EB;
+    --blue-lt:   #EDF0FF;
+    --blue-dk:   #3151CC;
+    --green:     #12B76A;
+    --green-lt:  #ECFDF5;
+    --amber:     #F59E0B;
+    --amber-lt:  #FFFBEB;
+    --red:       #F04438;
+    --red-lt:    #FEF3F2;
+    --purple:    #7C3AED;
     --r4: 6px; --r8: 10px; --r12: 14px; --r16: 18px;
     --sh:  0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
     --sh2: 0 4px 16px rgba(0,0,0,.08);
@@ -636,7 +636,4 @@ with tab5:
 
         best_r = region_comp.iloc[0]['Region']
         best_p = top5_prod.iloc[0]['Product Name']
-
         st.success(f"**Executive Summary** — ภูมิภาคหลัก: **{best_r}** · สินค้าอันดับ 1: **{best_p}** · เตรียมสต็อกล่วงหน้าตาม Peak Month")
-
-
